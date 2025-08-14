@@ -9,14 +9,18 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.TextStyle;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -39,6 +43,16 @@ public class TaskAppGUI {
 		createGUI();
 	}
 
+	String ordinal(int day) {
+	    if (day >= 11 && day <= 13) return "th"; // 11th, 12th, 13th are exceptions
+	    switch (day % 10) {
+	        case 1: return "st";
+	        case 2: return "nd";
+	        case 3: return "rd";
+	        default: return "th";
+	    }
+	}
+
 	private void createGUI() {
 		frame = new JFrame("Task & Reminder App");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -47,12 +61,20 @@ public class TaskAppGUI {
 		listModel = new DefaultListModel<>();
 		taskList = new JList<>(listModel);
 		JScrollPane scrollPane = new JScrollPane(taskList);
+		
+		LocalDate today = LocalDate.now();
+		String dayOfWeek = today.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.getDefault());
+		int dayOfMonth = today.getDayOfMonth();
+		String month = today.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
 
+		JLabel dayLabel = new JLabel("Today is " + dayOfWeek + " the " + dayOfMonth + ordinal(dayOfMonth) + " of " + month);
+		dayLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+		dayLabel.setHorizontalAlignment(JLabel.CENTER);
 		
 		taskField = new JTextField("Enter a task...");
 		taskField.setPreferredSize(new Dimension(0, 35));
         taskField.setForeground(Color.GRAY);
-        taskField.setFont(new Font("Segoe UI", Font.PLAIN, 18)); // bigger text, taller bar
+        taskField.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 
 
         taskField.addFocusListener(new FocusAdapter() {
@@ -118,6 +140,7 @@ public class TaskAppGUI {
 		            LocalDateTime dueDate = null;
 		            if (!dateInput.isEmpty()) {
 		                try {
+		                	// Fails
 		                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 		                    dueDate = LocalDateTime.parse(dateInput, formatter);
 		                } catch (DateTimeParseException ex) {
@@ -135,20 +158,14 @@ public class TaskAppGUI {
 		            taskField.setText("");
 		        }
 			}
-				/*
-				Task task = new Task(name, "", null);
-				taskManager.addTask(task);
-				listModel.addElement(task);
-			}
-				//taskField.setText("");
-				taskField.setForeground(Color.GRAY);
-				taskField.setText("Enter a task...");
-				*/
-			
 		});
 
+		JPanel topPanel = new JPanel(new BorderLayout());
+		topPanel.add(dayLabel, BorderLayout.NORTH);
+		topPanel.add(taskField, BorderLayout.SOUTH);
+		
 		JPanel panel = new JPanel(new BorderLayout());
-		panel.add(taskField, BorderLayout.NORTH);
+		panel.add(topPanel, BorderLayout.NORTH);
 		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.add(addButton, BorderLayout.SOUTH);
 
