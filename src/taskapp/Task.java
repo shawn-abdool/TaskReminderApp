@@ -26,7 +26,7 @@ public class Task {
 	}
 
 	public void setName(String name) {
-		name = name;
+		this.name = name;
 	}
 
 	public String getDescription() {
@@ -47,8 +47,10 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return name + (dueDate != null ? " (Due: " + dueDate + ")" : "");
+		if (dueDate != null) {
+            return name + " - " + description + " (Due: " + dueDate + ")";
+        } else {
+            return name + " - " + description;
+        }
 	}
-	
-
 }
