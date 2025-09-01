@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,6 +26,7 @@ public class TaskManager {
 
 	public void addTask(Task task) {
 		tasks.add(task);
+		Collections.sort(tasks);
 		saveTasks();
 	}
 

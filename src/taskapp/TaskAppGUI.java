@@ -132,7 +132,9 @@ public class TaskAppGUI {
 
     // Custom renderer = task card
     private static class TaskCardRenderer extends JPanel implements ListCellRenderer<Task> {
-        private JLabel nameLabel = new JLabel();
+    	// Default serial ID
+		private static final long serialVersionUID = 1L;
+		private JLabel nameLabel = new JLabel();
         private JLabel descLabel = new JLabel();
         private JLabel dateLabel = new JLabel();
 
@@ -237,6 +239,7 @@ public class TaskAppGUI {
 
             taskManager.addTask(task);
             listModel.addElement(task);
+            refreshTasks();
             taskField.setText("");
             dialog.dispose();
         });
@@ -268,6 +271,13 @@ public class TaskAppGUI {
                 }
             }
         });
+    }
+
+    private void refreshTasks() {
+    	listModel.clear();
+    	for (Task t : taskManager.getTask()) {
+    		listModel.addElement(t);
+    	}
     }
 
 
