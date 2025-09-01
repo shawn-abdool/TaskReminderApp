@@ -16,44 +16,45 @@ import java.util.List;
  * Add, remove and return tasks from a list.
  */
 public class TaskManager {
-	private List<Task> tasks;
-	private static final String FILE_NAME = "tasks.csv";
-	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private List<Task> tasks;
+    private static final String FILE_NAME = "tasks.csv";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-	public TaskManager() {
-		tasks = new ArrayList<>();
-	}
+    public TaskManager() {
+        tasks = new ArrayList<>();
+    }
 
-	public void addTask(Task task) {
-		tasks.add(task);
-		Collections.sort(tasks);
-		saveTasks();
-	}
+    public void addTask(Task task) {
+        tasks.add(task);
+        Collections.sort(tasks);
+        saveTasks();
+    }
 
-	public void removeTask(Task task) {
-		tasks.remove(task);
-		saveTasks();
-	}
+    public void removeTask(Task task) {
+        tasks.remove(task);
+        saveTasks();
+    }
 
-	public List<Task> getTask() {
-		return tasks;
-	}
+    public List<Task> getTask() {
+        return tasks;
+    }
 
-	public void saveTasks() {
-		try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_NAME))) {
-			for (Task task : tasks) {
-				String dueDate = task.getDueDate() != null ? task.getDueDate().format(formatter) : "";
-				writer.printf("%s,%s,%s%n",
-						escape(task.getName()),
-						escape(task.getDescription()),
-						dueDate);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+    public void saveTasks() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_NAME))) {
+            for (Task task : tasks) {
+                String dueDate = task.getDueDate() != null ? task.getDueDate().format(formatter) : "";
+                writer.printf("%s,%s,%s,%s%n",
+                        escape(task.getName()),
+                        escape(task.getDescription()),
+                        dueDate,
+                        escape(task.getGroup() != null ? task.getGroup() : "No group"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void loadTasks() {
+    public void loadTasks() {
         tasks.clear();
         File file = new File(FILE_NAME);
         if (!file.exists()) return;
@@ -65,11 +66,19 @@ public class TaskManager {
                 if (parts.length >= 2) {
                     String name = parts[0];
                     String description = parts[1];
+
                     LocalDateTime dueDate = null;
                     if (parts.length >= 3 && !parts[2].isEmpty()) {
-                        dueDate = LocalDateTime.parse(parts[2], formatter);
+                        try {
+                            dueDate = LocalDateTime.parse(parts[2], formatter);
+                        } catch (Exception e) {
+                            // handle bad/old format
+                        }
                     }
-                    tasks.add(new Task(name, description, dueDate));
+
+                    String group = (parts.length >= 4 && !parts[3].isEmpty()) ? parts[3] : "No group";
+
+                    tasks.add(new Task(name, description, dueDate, group));
                 }
             }
         } catch (IOException e) {
@@ -85,7 +94,7 @@ public class TaskManager {
         return value;
     }
 
-    // Parse a CSV line (handles quotes)
+    // Parse a CSV line
     private String[] parseCSV(String line) {
         List<String> values = new ArrayList<>();
         StringBuilder sb = new StringBuilder();

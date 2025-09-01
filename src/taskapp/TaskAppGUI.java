@@ -18,12 +18,24 @@ public class TaskAppGUI {
     private DefaultListModel<Task> listModel;
     private JList<Task> taskList;
     private JTextField taskField;
+    private DefaultComboBoxModel<String> groupModel = new DefaultComboBoxModel<>();
+    private JComboBox<String> groupFilterCombo;
+
+    private static final Color PRIMARY = new Color(33, 150, 243); // Blue accent
+    private static final Color BACKGROUND = new Color(245, 247, 250);
+    private static final Color CARD_BG = Color.WHITE;
+    private static final Color CARD_BORDER = new Color(220, 220, 220);
+    private static final Color GROUP_BG = new Color(236, 239, 241);
 
     public TaskAppGUI(TaskManager manager) {
+    	groupModel.addElement("No group");
         this.taskManager = manager;
         createGUI();
     }
 
+    /**
+     * Sets up the main GUI components.
+     */
     private void createGUI() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -31,23 +43,27 @@ public class TaskAppGUI {
 
         frame = new JFrame("Task & Reminder App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 500);
+        frame.setSize(650, 520);
         frame.setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(BACKGROUND);
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         frame.setContentPane(mainPanel);
 
         JLabel title = new JLabel("My Tasks", JLabel.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        title.setForeground(PRIMARY);
         mainPanel.add(title, BorderLayout.NORTH);
 
         // List setup
         listModel = new DefaultListModel<>();
         taskList = new JList<>(listModel);
         taskList.setCellRenderer(new TaskCardRenderer());
+        taskList.setBackground(BACKGROUND);
         JScrollPane scrollPane = new JScrollPane(taskList);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(BACKGROUND);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Input
@@ -55,7 +71,7 @@ public class TaskAppGUI {
         taskField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         taskField.setPreferredSize(new Dimension(0, 40));
         taskField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                BorderFactory.createLineBorder(PRIMARY, 2, true),
                 new EmptyBorder(5, 10, 5, 10)
         ));
         
@@ -82,20 +98,50 @@ public class TaskAppGUI {
         });
 
         JButton addButton = new JButton("Add");
-        styleButton(addButton);
+        styleAccentButton(addButton);
 
         JButton removeButton = new JButton("Remove Selected");
         styleButton(removeButton);
 
         JPanel inputPanel = new JPanel(new BorderLayout(10, 10));
+        inputPanel.setBackground(CARD_BG);
+        inputPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(CARD_BORDER, 1, true),
+            new EmptyBorder(10, 10, 10, 10)
+        ));
         inputPanel.add(taskField, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        buttonPanel.setOpaque(false);
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
         inputPanel.add(buttonPanel, BorderLayout.EAST);
 
         mainPanel.add(inputPanel, BorderLayout.SOUTH);
+
+        // Group filter panel
+        JPanel groupPanel = new JPanel(new BorderLayout());
+        groupPanel.setBackground(GROUP_BG);
+        groupPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(CARD_BORDER, 1, true),
+            new EmptyBorder(10, 10, 10, 10)
+        ));
+        JLabel groupLabel = new JLabel("Groups:");
+        groupLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        groupLabel.setForeground(PRIMARY);
+        groupPanel.add(groupLabel, BorderLayout.NORTH);
+
+        groupFilterCombo = new JComboBox<>(groupModel);
+        groupFilterCombo.insertItemAt("All groups", 0);
+        groupFilterCombo.setSelectedIndex(0);
+        groupFilterCombo.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        groupFilterCombo.setBackground(Color.WHITE);
+        groupFilterCombo.setForeground(Color.DARK_GRAY);
+        groupFilterCombo.addActionListener(e -> refreshTasks());
+
+        groupPanel.add(groupFilterCombo, BorderLayout.CENTER);
+
+        mainPanel.add(groupPanel, BorderLayout.WEST);
 
         // Button logic
         addButton.addActionListener(e -> {
@@ -117,17 +163,35 @@ public class TaskAppGUI {
         taskManager.loadTasks();
         for (Task task : taskManager.getTask()) {
             listModel.addElement(task);
+            String group = task.getGroup();
+            if (group != null && groupModel.getIndexOf(group) == -1) {
+                groupModel.addElement(group);
+            }
         }
 
         frame.setVisible(true);
     }
 
+    // Style for accent buttons
+    private void styleAccentButton(JButton btn) {
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        btn.setFocusPainted(false);
+        btn.setBackground(PRIMARY);
+        btn.setForeground(Color.BLACK);
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    // Style for normal buttons
     private void styleButton(JButton btn) {
         btn.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         btn.setFocusPainted(false);
-        btn.setBackground(null);
-        btn.setForeground(null);
+        btn.setBackground(new Color(224, 224, 224));
+        btn.setForeground(Color.DARK_GRAY);
         btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     // Custom renderer = task card
@@ -141,13 +205,18 @@ public class TaskAppGUI {
         private DateTimeFormatter formatter =
                 DateTimeFormatter.ofPattern("EEEE d MMMM yyyy, HH:mm");
 
+        // Card layout
         public TaskCardRenderer() {
             setLayout(new BorderLayout(5, 5));
-            setBorder(new EmptyBorder(10, 10, 10, 10));
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                new EmptyBorder(10, 10, 10, 10)
+            ));
+            setBackground(CARD_BG);
 
             nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
             descLabel.setFont(new Font("Segoe UI", Font.ITALIC, 13));
-            descLabel.setForeground(Color.GRAY);
+            descLabel.setForeground(new Color(120, 120, 120));
             dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             dateLabel.setForeground(new Color(100, 100, 100));
 
@@ -161,9 +230,10 @@ public class TaskAppGUI {
             setOpaque(true);
         }
 
+        // Render each task as a card
         @Override
         public Component getListCellRendererComponent(JList<? extends Task> list, Task task,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
+                                                        int index, boolean isSelected, boolean cellHasFocus) {
             nameLabel.setText(task.getName());
             descLabel.setText(task.getDescription() == null ? "" : task.getDescription());
             if (task.getDueDate() != null) {
@@ -173,11 +243,14 @@ public class TaskAppGUI {
             }
 
             if (isSelected) {
-                setBackground(new Color(200, 220, 250));
+                setBackground(new Color(232, 244, 253));
             } else {
-                setBackground(Color.WHITE);
+                setBackground(CARD_BG);
             }
-            setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180), 1, true));
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(isSelected ? PRIMARY : CARD_BORDER, 2, true),
+                new EmptyBorder(10, 10, 10, 10)
+            ));
             return this;
         }
     }
@@ -212,17 +285,25 @@ public class TaskAppGUI {
         timeSpinner.setEditor(timeEditor);
         timeEditor.getTextField().setFont(new Font("Segoe UI", Font.PLAIN, 16));
 
+        // Group field
+        JComboBox<String> groupCombo = new JComboBox<>(groupModel);
+        groupCombo.setEditable(true);
+
+
         //timeEditor.getTextField().setFont(new Font("Arial", Font.PLAIN, 16));
 
         inputPanel.add(descField);
+        inputPanel.add(groupCombo);
         //inputPanel.add(dateField);
 
         dialog.add(inputPanel, BorderLayout.CENTER);
 
+        
         // Add Button
         JButton addBtn = new JButton("Add Task");
-        addBtn.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        styleAccentButton(addBtn);
 
+        // Button logic
         addBtn.addActionListener(e -> {
             String desc = descField.getText().trim();
             //String dateStr = dateField.getText().trim();
@@ -235,7 +316,18 @@ public class TaskAppGUI {
                     time.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalTime()
             );
 
-            Task task = new Task(name, desc.isEmpty() ? "No description" : desc, dueDate);
+            String group = (String) groupCombo.getSelectedItem();
+            if (group == null || group.isEmpty()) {
+                group = "No group";
+            }
+
+            // If it's a new group, add it to the dropdown model
+            if (groupModel.getIndexOf(group) == -1) {
+                groupModel.addElement(group);
+            }
+
+            // Creating the task
+            Task task = new Task(name, desc.isEmpty() ? "No description" : desc, dueDate, group);
 
             taskManager.addTask(task);
             listModel.addElement(task);
@@ -273,11 +365,15 @@ public class TaskAppGUI {
         });
     }
 
+    // Order tasks based on group filter
     private void refreshTasks() {
     	listModel.clear();
-    	for (Task t : taskManager.getTask()) {
-    		listModel.addElement(t);
-    	}
+        String selectedGroup = (String) groupFilterCombo.getSelectedItem();
+        for (Task t : taskManager.getTask()) {
+            if ("All groups".equals(selectedGroup) || t.getGroup().equals(selectedGroup)) {
+                listModel.addElement(t);
+            }
+        }
     }
 
 

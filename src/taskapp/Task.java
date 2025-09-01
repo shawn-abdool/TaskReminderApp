@@ -6,6 +6,7 @@ public class Task implements Comparable<Task>{
 	private String name;
 	private String description;
 	private LocalDateTime dueDate;
+	private String group;
 
 	/**
 	 * Represents a single task.
@@ -14,10 +15,11 @@ public class Task implements Comparable<Task>{
 	 * @param description
 	 * @param dueDate
 	 */
-	public Task(String name, String description, LocalDateTime dueDate) {
+	public Task(String name, String description, LocalDateTime dueDate, String group) {
 		this.name = name;
 		this.description = description;
 		this.dueDate = dueDate;
+		this.group = (group == null || group.isEmpty()) ? "No group" : group;
 	}
 
 	// Getters and Setters
@@ -43,6 +45,14 @@ public class Task implements Comparable<Task>{
 
 	public void setDueDate(LocalDateTime dueDate) {
 		this.dueDate = dueDate;
+	}
+
+	public String getGroup() {
+		return group;
+	}
+
+	public void setGroup(String group) {
+		this.group = (group == null || group.isEmpty()) ? "No Group" : group;
 	}
 
 	@Override
