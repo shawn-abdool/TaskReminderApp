@@ -22,10 +22,10 @@ public class TaskAppGUI {
     private JComboBox<String> groupFilterCombo;
 
     private static final Color PRIMARY = new Color(33, 150, 243); // Blue accent
-    private static final Color BACKGROUND = new Color(245, 247, 250);
+    private static final Color BACKGROUND = new Color(245, 247, 250); // Light blue
     private static final Color CARD_BG = Color.WHITE;
-    private static final Color CARD_BORDER = new Color(220, 220, 220);
-    private static final Color GROUP_BG = new Color(236, 239, 241);
+    private static final Color CARD_BORDER = new Color(220, 220, 220); // Light grey
+    private static final Color GROUP_BG = new Color(236, 239, 241); // Darkened light grey
 
     public TaskAppGUI(TaskManager manager) {
     	groupModel.addElement("No group");
