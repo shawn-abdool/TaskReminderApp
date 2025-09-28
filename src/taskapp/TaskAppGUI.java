@@ -289,12 +289,8 @@ public class TaskAppGUI {
         JComboBox<String> groupCombo = new JComboBox<>(groupModel);
         groupCombo.setEditable(true);
 
-
-        //timeEditor.getTextField().setFont(new Font("Arial", Font.PLAIN, 16));
-
         inputPanel.add(descField);
         inputPanel.add(groupCombo);
-        //inputPanel.add(dateField);
 
         dialog.add(inputPanel, BorderLayout.CENTER);
 
@@ -306,8 +302,6 @@ public class TaskAppGUI {
         // Button logic
         addBtn.addActionListener(e -> {
             String desc = descField.getText().trim();
-            //String dateStr = dateField.getText().trim();
-            //LocalDateTime due = null;
             Date date = (Date) dateSpinner.getValue();
             Date time = (Date) timeSpinner.getValue();
 
